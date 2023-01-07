@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands | Abdulhakim Özcan</title>
+<meta name="keywords" content="Python, Gaussian Process">
+<meta name="description" content="Analyzing the gender breakdown of inbound commuters from Belgium and Germany to the Netherlands">
+<meta name="author" content="">
+<link rel="canonical" href="https://hakimozcan.github.io/projects/gpr/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.a72801f0f40a8d7f71aa1cafd1c2f2a993a1f26ca1cfd38fdba65d5b9b0f08a0.css" integrity="sha256-pygB8PQKjX9xqhyv0cLyqZOh8myhz9OP26ZdW5sPCKA=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.b95bacdc39e37a332a9f883b1e78be4abc1fdca2bc1f2641f55e3cd3dabd4d61.js" integrity="sha256-uVus3DnjejMqn4g7Hni&#43;Srwf3KK8HyZB9V4809q9TWE="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://hakimozcan.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://hakimozcan.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://hakimozcan.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://hakimozcan.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://hakimozcan.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands" />
+<meta property="og:description" content="Analyzing the gender breakdown of inbound commuters from Belgium and Germany to the Netherlands" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://hakimozcan.github.io/projects/gpr/" />
+<meta property="og:image" content="https://hakimozcan.github.io/projects/gpr/figure-1.png" /><meta property="article:section" content="projects" />
+
+
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://hakimozcan.github.io/projects/gpr/figure-1.png" />
+<meta name="twitter:title" content="Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands"/>
+<meta name="twitter:description" content="Analyzing the gender breakdown of inbound commuters from Belgium and Germany to the Netherlands"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Projects",
+      "item": "https://hakimozcan.github.io/projects/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands",
+      "item": "https://hakimozcan.github.io/projects/gpr/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands",
+  "name": "Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands",
+  "description": "Analyzing the gender breakdown of inbound commuters from Belgium and Germany to the Netherlands",
+  "keywords": [
+    "Python", "Gaussian Process"
+  ],
+  "articleBody": "Introduction Since its establishment, the European Union (EU) has made significant progress towards integration. A key factor in this process was the creation of the common market in the 1990s. One of the benefits of the EU common market is the ability to work in one member state while residing in another. Some notable examples are the cross-border commuting between Poland and Germany, and between Slovakia and Austria. The Netherlands is another example, with over 82,000 people working in the country while living in Belgium or Germany in 2018 (Grensdata, 2021). The purpose of this project was to examine the over-time gender distribution of workers who commutes to 40 Dutch regions, utilizing Gaussian Process Regression (GPR).\nData The European Union defines cross-border commuters as workers who are employed in one member state while officially living in another and return to the country of residence daily or at least once a week. The commuting data used to feed into the model is received from the Netherlands’ national statistical office (CBS). The office identified the workplace of the commuters for the first time in 2020 and the data is made available with a period ranging from 2010 to 2018. CBS provides border statistics in a database, where the number of commuters can be broken down by sex, nationality, working regions (NUTS levels), and country of residence. I divided the data into sex, nationality, working regions and year, which produces a longitudinal panel data.\nMethod I used the Gaussian process (GP) to analyse the commuting data. GP is a flexible Bayesian method that can be used for non-parametric regression. The motivation behind GP is that the default approaches are often not suited to model noisy, large-scale, and non-linear real-world data sets.\n$$ f(x) \\sim GP(m(x), k(x, x^\\prime)) $$\nGP has a mean and covariance function as seen in the above formula, rather than having a mean and a covariance matrix as in traditional methods. The first expression, 𝑚(𝑥), on the right side of the equation is called the mean function, while the second expression, 𝑘(𝑥, 𝑥’), is the covariance function. Covariance functions receive certain inputs, 𝑥 and 𝑥’, and essentially produce covariance matrices corresponding to those entries. To construct the covariance function, I used the exponentiated quadratic kernel. This kernel is known for modelling the smoothness of function and it is also used to encode the local variation within a dataset. Since the commuting data includes closely located regions and a time component, this kernel performed either better or similar compared to a few other kernels. On the other hand, mean functions create mean vectors and they are usually set to constant values or linear functions. Like other Bayesian models, GP is specified based on the Bayesian formula. The following equation shows the way the Bayesian model is specified.\n$$ P(\\theta \\mid x) \\propto P(x \\mid \\theta) P(x)$$\nThe expression on the left side of the formula is called posterior and it represents the probability of unknown θ, given the observed data 𝑥. The expressions on the right side of the formula are respectively called likelihood function and prior distribution and both together represent the combination of information about the θ before the data is observed. In the Gaussian process, we are essentially interested in estimating the posterior distribution, the left side of the above equation. To implement a Gaussian process regression for the commuting data, the same Bayesian steps were followed. There are multiple libraries to implement GP in Python. This project used PYMC3 to define and use GPs. PYMC3 is an open-source high-level probabilistic programming package written into Python and allows the construction and implementation of Bayesian models.\nFindings The Gaussian process model shows that the proportion of female commuters remained relatively constant at around 30% from 2010 to 2018. In contrast, the percentage of male commuters stayed stable at around 70% over the same period. Note that there is some uncertainty on the edges because there is no data before 2010 and after 2018.\nFigure 2: Posterior Distribution of Commuters by Sex (2010-2018)\nI expected that Belgian and German female workers would exhibit similar trends in their percentages among all commuters over time. However, the GP model indicates that these groups have different trends (Figure 2). The percentage of female Belgian commuters in their respective regions decreased over time, while the percentage of female German commuters increased.\nFigure 3: Posterior Distribution of Commuters by Nationality (2010-2018)\nResources GitHub Page Grensdata. (2021, February 12). Grenspendel werknemers; nationaliteit, woonland, werkregio (NUTS 3). https://grensdata.eu/#/InterReg/nl/dataset/22003NED/table?ts=1622891052614 ",
+  "wordCount" : "751",
+  "inLanguage": "en",
+  "image":"https://hakimozcan.github.io/projects/gpr/figure-1.png","datePublished": "0001-01-01T00:00:00Z",
+  "dateModified": "0001-01-01T00:00:00Z",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://hakimozcan.github.io/projects/gpr/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Abdulhakim Özcan",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://hakimozcan.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header sticky-header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://hakimozcan.github.io" accesskey="h" title="Abdulhakim Özcan (Alt + H)">Abdulhakim Özcan</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://hakimozcan.github.io/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://hakimozcan.github.io/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://hakimozcan.github.io/projects" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://hakimozcan.github.io/blog" title="Blog">
+                    <span>Blog</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://hakimozcan.github.io/search" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://hakimozcan.github.io">Home</a>&nbsp;»&nbsp;<a href="https://hakimozcan.github.io/projects/">Projects</a></div>
+    <h1 class="post-title">
+      Gaussian Process Regression for Analysis of the Inbound Commuting to the Netherlands
+    </h1>
+    <div class="post-description">
+      Analyzing the gender breakdown of inbound commuters from Belgium and Germany to the Netherlands
+    </div>
+    <div class="post-meta">
+
+
+May - June 2021
+
+</div>
+  </header> 
+<figure class="entry-cover"><img loading="lazy" src="https://hakimozcan.github.io/projects/gpr/figure-1.png" alt="[Figure 1: Municipal Share of Inbound Cross-Border Commuters (2018)](https://www.cbs.nl/en-gb/news/2020/46/inbound-commuters-often-live-just-across-the-border)">
+        <p><a href="https://www.cbs.nl/en-gb/news/2020/46/inbound-commuters-often-live-just-across-the-border">Figure 1: Municipal Share of Inbound Cross-Border Commuters (2018)</a></p>
+</figure><div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">‎ Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a></li>
+                <li>
+                    <a href="#data" aria-label="Data">Data</a></li>
+                <li>
+                    <a href="#method" aria-label="Method">Method</a></li>
+                <li>
+                    <a href="#findings" aria-label="Findings">Findings</a></li>
+                <li>
+                    <a href="#resources" aria-label="Resources">Resources</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>Since its establishment, the European Union (EU) has made significant progress towards integration. A key factor in this process was the creation of the common market in the 1990s. One of the benefits of the EU common market is the ability to work in one member state while residing in another. Some notable examples are the cross-border commuting between Poland and Germany, and between Slovakia and Austria. The Netherlands is another example, with over 82,000 people working in the country while living in Belgium or Germany in 2018 (Grensdata, 2021). The purpose of this project was to examine the over-time gender distribution of workers who commutes to 40 Dutch regions, utilizing Gaussian Process Regression (GPR).</p>
+<h2 id="data">Data<a hidden class="anchor" aria-hidden="true" href="#data">#</a></h2>
+<p>The European Union defines cross-border commuters as workers who are employed in one member state while officially living in another and return to the country of residence daily or at least once a week. The commuting data used to feed into the model is received from the Netherlands’ national statistical office (CBS). The office identified the workplace of the commuters for the first time in 2020 and the data is made available with a period ranging from 2010 to 2018. CBS provides border statistics in a database, where the number of commuters can be broken down by sex, nationality, working regions (NUTS levels), and country of residence. I divided the data into sex, nationality, working regions and year, which produces a longitudinal panel data.</p>
+<h2 id="method">Method<a hidden class="anchor" aria-hidden="true" href="#method">#</a></h2>
+<p>I used the Gaussian process (GP) to analyse the commuting data. GP is a flexible Bayesian method that can be used for non-parametric regression. The motivation behind GP is that the default approaches are often not suited to model noisy, large-scale, and non-linear real-world data sets.</p>
+<p>$$ f(x) \sim GP(m(x), k(x, x^\prime)) $$</p>
+<p>GP has a mean and covariance function as seen in the above formula, rather than having a mean and a covariance matrix as in traditional methods. The first expression, 𝑚(𝑥), on the right side of the equation is called the mean function, while the second expression, 𝑘(𝑥, 𝑥’), is the covariance function. Covariance functions receive certain inputs, 𝑥 and 𝑥’, and essentially produce covariance matrices corresponding to those entries. To construct the covariance function, I used the exponentiated quadratic kernel. This kernel is known for modelling the smoothness of function and it is also used to encode the local variation within a dataset. Since the commuting data includes closely located regions and a time component, this kernel performed either better or similar compared to a few other kernels. On the other hand, mean functions create mean vectors and they are usually set to constant values or linear functions. Like other Bayesian models, GP is specified based on the Bayesian formula. The following equation shows the way the Bayesian model is specified.</p>
+<p>$$ P(\theta \mid x) \propto P(x \mid \theta) P(x)$$</p>
+<p>The expression on the left side of the formula is called posterior and it represents the probability of unknown θ, given the observed data 𝑥. The expressions on the right side of the formula are respectively called likelihood function and prior distribution and both together represent the combination of information about the θ before the data is observed. In the Gaussian process, we are essentially interested in estimating the posterior distribution, the left side of the above equation. To implement a Gaussian process regression for the commuting data, the same Bayesian steps were followed. There are multiple libraries to implement GP in Python. This project used PYMC3 to define and use GPs. PYMC3 is an open-source high-level probabilistic programming package written into Python and allows the construction and implementation of Bayesian models.</p>
+<h2 id="findings">Findings<a hidden class="anchor" aria-hidden="true" href="#findings">#</a></h2>
+<p>The Gaussian process model shows that the proportion of female commuters remained relatively constant at around 30% from 2010 to 2018. In contrast, the percentage of male commuters stayed stable at around 70% over the same period. Note that there is some uncertainty on the edges because there is no data before 2010 and after 2018.</p>
+<figure>
+    <img loading="lazy" src="/projects/gpr/figure-2.png"
+         alt="Figure 2: Posterior Distribution of Commuters by Sex (2010-2018)"/> <figcaption>
+            <p>Figure 2: Posterior Distribution of Commuters by Sex (2010-2018)</p>
+        </figcaption>
+</figure>
+
+<p>I expected that Belgian and German female workers would exhibit similar trends in their percentages among all commuters over time. However, the GP model indicates that these groups have different trends (Figure 2). The percentage of female Belgian commuters in their respective regions decreased over time, while the percentage of female German commuters increased.</p>
+<figure>
+    <img loading="lazy" src="/projects/gpr/figure-3.png"
+         alt="Figure 3: Posterior Distribution of Commuters by Nationality (2010-2018)"/> <figcaption>
+            <p>Figure 3: Posterior Distribution of Commuters by Nationality (2010-2018)</p>
+        </figcaption>
+</figure>
+
+<h2 id="resources">Resources<a hidden class="anchor" aria-hidden="true" href="#resources">#</a></h2>
+<ul>
+<li><a href="https://github.com/hakimozcan/PythonCourse/tree/master/project">GitHub Page</a></li>
+<li>Grensdata. (2021, February 12). Grenspendel werknemers; nationaliteit, woonland, werkregio (NUTS 3). <a href="https://grensdata.eu/#/InterReg/nl/dataset/22003NED/table?ts=1622891052614">https://grensdata.eu/#/InterReg/nl/dataset/22003NED/table?ts=1622891052614</a></li>
+</ul>
+<!-- This following code adds math expressions to this page -->
+<!-- This part includes the Javascript file -->
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<!-- this part configures it -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[','\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+</script>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://hakimozcan.github.io/tags/python/">Python</a></li>
+      <li><a href="https://hakimozcan.github.io/tags/gaussian-process/">Gaussian Process</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2023 <a href="https://hakimozcan.github.io">Abdulhakim Özcan</a></span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
